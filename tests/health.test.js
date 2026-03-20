@@ -1,4 +1,9 @@
+jest.mock("axios", () => ({
+  get: jest.fn()
+}));
+
 const request = require("supertest");
+const axios = require("axios");
 const { app } = require("../src/app");
 const { getHealthStatus } = require("../src/health/checks");
 
@@ -54,6 +59,7 @@ describe("health aggregation checks", () => {
 
   beforeEach(() => {
     process.env = { ...originalEnv };
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -76,13 +82,60 @@ describe("health aggregation checks", () => {
   });
 
   test("marks database as fail on timeout and propagates fail aggregate", async () => {
-    process.env.DATABASE_HEALTHCHECK_URL = "http://10.255.255.1:1";
-    process.env.HEALTHCHECK_TIMEOUT_MS = "10";
+    process.env.DATABASE_HEALTHCHECK_URL = "http://database.local/health";
+    process.env.HEALTHCHECK_TIMEOUT_MS = "25";
+    axios.get.mockRejectedValueOnce({ code: "ECONNABORTED" });
 
     const status = await getHealthStatus();
 
     expect(status.status).toBe("fail");
     expect(status.services.database).toHaveProperty("status", "fail");
     expect(status.services.database).toHaveProperty("error", "timeout");
+  });
+
+  test("keeps non-critical dependency failures visible without masking healthy checks", async () => {
+    process.env.EXTERNAL_API_HEALTHCHECK_URL = "http://external.local/health";
+    process.env.NOTIFICATION_PROVIDER_HEALTHCHECK_URL =
+      "http://notify.local/health";
+    process.env.INTERNAL_SERVICE_HEALTHCHECK_URL = "http://internal.local/health";
+
+    axios.get.mockImplementation(async (url) => {
+      if (url === process.env.EXTERNAL_API_HEALTHCHECK_URL) {
+        return { status: 500 };
+      }
+
+      return { status: 200 };
+    });
+
+    const status = await getHealthStatus();
+
+    expect(status.status).toBe("degraded");
+    expect(status.services.database).toHaveProperty("status", "ok");
+    expect(status.services.external_api).toEqual(
+      expect.objectContaining({ status: "fail", error: "http_500" })
+    );
+    expect(status.services.notification_provider).toHaveProperty("status", "ok");
+    expect(status.services.internal_service).toHaveProperty("status", "ok");
+  });
+
+  test("treats internal service failures as critical for readiness", async () => {
+    process.env.EXTERNAL_API_HEALTHCHECK_URL = "http://external.local/health";
+    process.env.INTERNAL_SERVICE_HEALTHCHECK_URL = "http://internal.local/health";
+
+    axios.get.mockImplementation(async (url) => {
+      if (url === process.env.INTERNAL_SERVICE_HEALTHCHECK_URL) {
+        return { status: 503 };
+      }
+
+      return { status: 200 };
+    });
+
+    const status = await getHealthStatus();
+
+    expect(status.status).toBe("fail");
+    expect(status.services.external_api).toHaveProperty("status", "ok");
+    expect(status.services.internal_service).toEqual(
+      expect.objectContaining({ status: "fail", error: "http_503" })
+    );
   });
 });

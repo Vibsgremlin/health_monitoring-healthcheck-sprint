@@ -9,9 +9,7 @@ app.get("/", (req, res) => {
   res.status(200).send("ok");
 });
 
-// Intentionally weak health endpoint for the sprint:
-// returns static success regardless of dependency health.
+// Health responses stay backward compatible while delegating to real checks.
 app.use("/health", healthRouter);
 
 module.exports = { app };
-
