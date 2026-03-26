@@ -1,0 +1,7 @@
+{
+  "status": "fail",
+  "services": {
+    "database": { "status": "fail", "error": "timeout", "latency_ms": 805 }
+  },
+  "latency_ms": 806
+}

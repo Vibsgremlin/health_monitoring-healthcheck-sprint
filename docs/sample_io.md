@@ -1,24 +1,13 @@
 # Sample Inputs and Outputs
 
-## Sample request
-```http
-GET /health
-```
+## Example files
+- `examples/health_request.http`
+- `examples/healthy_response.json`
+- `examples/fail_response.json`
+- `outputs/test_run.log`
 
-## Sample environment setup
-```env
-DATABASE_HEALTHCHECK_URL=http://localhost:5432/health
-EXTERNAL_API_HEALTHCHECK_URL=http://localhost:4000/health
-HEALTHCHECK_TIMEOUT_MS=800
-```
-
-## Sample response when database fails
-```json
-{
-  "status": "fail",
-  "services": {
-    "database": { "status": "fail", "error": "timeout", "latency_ms": 805 }
-  },
-  "latency_ms": 806
-}
-```
+## Recommended walkthrough
+1. Start the service locally.
+2. Send the request in `examples/health_request.http`.
+3. Compare the output with the healthy and failure JSON fixtures.
+4. Review the representative test log in `outputs/test_run.log`.

@@ -1,0 +1,5 @@
+PASS tests/health.test.js
+  GET /health
+    ok path returns 200
+    degraded path returns 200
+    fail path returns 503

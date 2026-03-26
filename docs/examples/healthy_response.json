@@ -1,0 +1,8 @@
+{
+  "status": "ok",
+  "services": {
+    "database": { "status": "ok", "latency_ms": 4 },
+    "external_api": { "status": "degraded", "error": "missing_configuration", "latency_ms": 1 }
+  },
+  "latency_ms": 7
+}
