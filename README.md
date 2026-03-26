@@ -72,3 +72,8 @@ flowchart LR
 - What did not:
   - the repo comment in [`src/app.js`](C:\Users\91965\cars24\github-readme-batch\health_monitoring-healthcheck-sprint\src\app.js) still suggests a static health endpoint, while the implementation is now dynamic
   - the database fallback is a filesystem read, which is good for local smoke testing but not a true database connectivity check
+
+## Supporting Docs
+- [Architecture diagram](docs/architecture.png)
+- [Evaluation logs and outputs](docs/evaluation.md)
+- [Sample inputs and outputs](docs/sample_io.md)
